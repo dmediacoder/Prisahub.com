@@ -1,9 +1,21 @@
 name: Fetch NHS Jobs
 
+# Runs the whole fetch job in small steps from GitHub's infrastructure, which has no
+# 10-second limit — that's the piece Vercel's Hobby plan can't give us. This workflow
+# calls /api/fetch once per (category, keyword) combo, so each individual call to Vercel
+# stays small and fast, and nothing gets cut off partway through.
+#
+# Scheduled around when NHS Jobs tends to post fresh vacancies: ~12pm and ~5pm UK time.
+# GitHub Actions cron runs in UTC and does not adjust for daylight saving — these times
+# are set for BST (UTC+1, British Summer Time). Once the UK switches to GMT (late
+# October), subtract 1 hour from each cron line below to keep hitting the same UK clock
+# time (e.g. '30 11' becomes '30 12').
+
 on:
   schedule:
-    - cron: '0 6 * * *'
-  workflow_dispatch: {}
+    - cron: '30 11 * * *'   # 12:30pm UK time (BST) — after the ~12pm posting wave
+    - cron: '30 16 * * *'   # 5:30pm UK time (BST) — after the ~5pm posting wave
+  workflow_dispatch: {}      # lets you trigger a run manually from the Actions tab
 
 jobs:
   fetch-all:
