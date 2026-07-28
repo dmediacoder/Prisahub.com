@@ -1,0 +1,29 @@
+name: Fetch NHS Jobs
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  fetch-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discover every (category, keyword) combo
+        run: |
+          curl -sf "${{ secrets.PRISAHUB_URL }}/api/fetch?list=true" -o combos.json
+          echo "Combos to fetch:"
+          jq '.count' combos.json
+
+      - name: Fetch each combo, one at a time
+        run: |
+          COUNT=$(jq '.combos | length' combos.json)
+          for i in $(seq 0 $((COUNT - 1))); do
+            CAT=$(jq -r ".combos[$i].category" combos.json)
+            KW=$(jq -r ".combos[$i].kwIndex" combos.json)
+            KWTEXT=$(jq -r ".combos[$i].keyword" combos.json)
+            echo "[$i/$COUNT] category=$CAT keyword=\"$KWTEXT\""
+            curl -sf "${{ secrets.PRISAHUB_URL }}/api/fetch?category=$CAT&kwIndex=$KW" \
+              | jq -c '{category, keyword, found, saved}' || echo "  (this combo failed, continuing)"
+            sleep 2
+          done
