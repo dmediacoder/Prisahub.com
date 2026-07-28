@@ -1,8 +1,16 @@
 name: Enrich NHS Jobs
 
+# Calls /api/enrich repeatedly in small batches (15 jobs at a time) until nothing is
+# left unenriched. Scheduled about 1.5-2 hours after each fetch run so newly-saved jobs
+# get their band and sponsorship details filled the same day.
+#
+# Same UTC/BST note as fetch-jobs.yml — subtract 1 hour from each cron line once the UK
+# switches to GMT in late October.
+
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 13 * * *'   # 2pm UK time (BST) — after the 12:30 fetch has had time to finish
+    - cron: '0 18 * * *'   # 7pm UK time (BST) — after the 5:30 fetch has had time to finish
   workflow_dispatch: {}
 
 jobs:
