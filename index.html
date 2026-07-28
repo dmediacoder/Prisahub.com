@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prisahub — Live NHS Job Links</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8faff;color:#0f172a;font-size:14px}
+.shell{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:260px;flex-shrink:0;background:#0f172a;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+.sidebar::-webkit-scrollbar{width:0}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sb-icon{width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;color:#fff;font-weight:900}
+.sb-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.sb-name span{color:#60a5fa}
+.sb-tag{font-size:9.5px;color:rgba(255,255,255,.3);font-weight:500;letter-spacing:.05em;margin-top:1px}
+.sb-divider{height:1px;background:rgba(255,255,255,.06);margin:8px 16px}
+.cat-scroll{flex:1;padding:4px 10px 20px;overflow-y:auto}
+.cat-scroll::-webkit-scrollbar{width:0}
+.grp-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.12em;padding:12px 6px 4px}
+.cat-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:none;background:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;transition:all .12s;margin-bottom:1px;text-align:left}
+.cat-btn:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85)}
+.cat-btn.active{background:rgba(59,130,246,.15);color:#93c5fd;font-weight:600}
+.cat-icon{font-size:11px;width:18px;text-align:center;flex-shrink:0;opacity:.7;font-style:normal}
+.cat-label{flex:1;line-height:1.3}
+
+/* MAIN */
+.main{margin-left:260px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #e8eef8;position:sticky;top:0;z-index:50}
+.header-top{padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:58px}
+.header-title h1{font-size:17px;font-weight:800;color:#0f172a;letter-spacing:-.3px}
+.header-title p{font-size:12px;color:#64748b;margin-top:1px}
+.header-controls{display:flex;align-items:center;gap:8px}
+.search-wrap{position:relative}
+.s-input{width:240px;padding:9px 14px 9px 38px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;color:#0f172a;background:#f8fafc;outline:none;transition:all .15s}
+.s-input:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.s-input::placeholder{color:#94a3b8}
+.s-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;font-size:14px}
+.sponsor-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;font-family:inherit;font-size:12.5px;font-weight:600;color:#475569;cursor:pointer;transition:all .15s;white-space:nowrap}
+.sponsor-btn:hover{border-color:#94a3b8}
+.sponsor-btn.active{border-color:#22c55e;background:#f0fdf4;color:#166534}
+.sponsor-btn .dot{width:7px;height:7px;border-radius:50%;background:#cbd5e1;flex-shrink:0}
+.sponsor-btn.active .dot{background:#22c55e}
+
+/* STATS */
+.stats-bar{background:#fff;border-bottom:1px solid #e8eef8;padding:0 28px;display:flex;gap:0}
+.stat{padding:9px 20px 9px 0;border-right:1px solid #f1f5f9;margin-right:20px;flex-shrink:0}
+.stat:last-child{border-right:none}
+.stat-n{font-size:15px;font-weight:800;line-height:1}
+.stat-l{font-size:9.5px;color:#94a3b8;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+
+/* CONTENT */
+.content{padding:20px 28px;flex:1}
+.content-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.result-count{font-size:13px;color:#64748b}
+.result-count strong{color:#0f172a;font-weight:700}
+
+/* JOB CARDS */
+.job-card{background:#fff;border:1px solid #e8eef8;border-radius:14px;padding:16px 20px;transition:all .18s;margin-bottom:10px}
+.job-card:hover{border-color:#c7d7f8;box-shadow:0 4px 20px rgba(59,130,246,.07)}
+.job-title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:3px;line-height:1.35}
+.job-title a{color:#0f172a;text-decoration:none}
+.job-title a:hover{color:#1d4ed8}
+.job-org{font-size:12.5px;color:#3b82f6;font-weight:600;margin-bottom:8px}
+.job-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag{font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:6px}
+.t-band{background:#eff6ff;color:#1d4ed8;border:1px solid #dbeafe}
+.t-salary{background:#f0fdf4;color:#15803d;border:1px solid #dcfce7}
+.t-close{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+.t-loc{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.t-date{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.job-footer{display:flex;align-items:center;gap:8px;margin-top:10px}
+.view-btn{padding:8px 18px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;transition:all .18s}
+.view-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(29,78,216,.3);color:#fff}
+.cp-btn{width:36px;height:36px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;padding:0;color:#64748b}
+.cp-btn:hover{border-color:#3b82f6;background:#eff6ff;color:#1d4ed8}
+.wa-btn{width:36px;height:36px;border-radius:8px;background:#f0fdf4;border:1.5px solid #bbf7d0;display:inline-flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;text-decoration:none;color:#16a34a}
+.wa-btn:hover{background:#dcfce7;transform:translateY(-1px)}
+
+/* STATES */
+.spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-wrap{text-align:center;padding:80px 20px;color:#64748b}
+.empty{text-align:center;padding:70px 20px}
+.empty h3{font-size:16px;font-weight:700;color:#475569;margin-bottom:8px}
+.empty p{font-size:13px;color:#94a3b8;max-width:320px;margin:0 auto;line-height:1.7}
+
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e8eef8 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{to{background-position:-200% 0}}
+.sk-card{background:#fff;border:1px solid #e8eef8;border-radius:14px;padding:16px 20px;margin-bottom:10px}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;padding-bottom:40px}
+.pg-btn{padding:8px 18px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-family:inherit;font-size:12.5px;font-weight:600;color:#374151;cursor:pointer;transition:all .15s}
+.pg-btn:hover{border-color:#3b82f6;color:#1d4ed8}
+.pg-btn:disabled{opacity:.3;cursor:not-allowed}
+.pg-info{font-size:12.5px;color:#94a3b8;padding:0 4px}
+
+@media(max-width:900px){
+  .sidebar{width:100%;position:static}.shell{flex-direction:column}.main{margin-left:0}
+  .header-top,.content{padding:14px 16px}.stats-bar{padding:0 16px}
+  .s-input{width:160px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">
+      <div class="sb-icon">P</div>
+      <div><div class="sb-name">Prisa<span>hub</span></div><div class="sb-tag">LIVE NHS JOB LINKS</div></div>
+    </div>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="cat-scroll" id="cat-list"></div>
+</aside>
+
+<main class="main">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">
+        <h1 id="ptitle">NHS Jobs</h1>
+        <p id="psub">Live permanent NHS vacancies</p>
+      </div>
+      <div class="header-controls">
+        <button class="sponsor-btn" id="sponsor-btn" onclick="toggleSponsor()">
+          <span class="dot"></span>Sponsorship
+        </button>
+        <div class="search-wrap">
+          <span class="s-icon">&#9906;</span>
+          <input class="s-input" id="s-input" placeholder="Search jobs..."/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-n" style="color:#3b82f6" id="sn-total">—</div><div class="stat-l">Jobs Found</div></div>
+    <div class="stat"><div class="stat-n" style="color:#7c3aed">100%</div><div class="stat-l">Permanent</div></div>
+    <div class="stat"><div class="stat-n" id="sn-upd" style="color:#f59e0b;font-size:11px">—</div><div class="stat-l">Updated</div></div>
+  </div>
+
+  <div class="content">
+    <div class="content-header">
+      <div class="result-count" id="rlabel"></div>
+    </div>
+    <div id="jlist"></div>
+    <div class="pagination" id="pgn"></div>
+  </div>
+</main>
+</div>
+
+<script>
+var _cat='admin-out',_kw='',_pg=1,_pgs=1,_tot=0,_jobs=[],_tmr=null,_busy=false,_sponsor=false;
+
+var CATS=[
+  {id:'admin-out', label:'Admin Outside London',          icon:'A', g:'Admin'},
+  {id:'admin-lon', label:'Admin in London',               icon:'A', g:'Admin'},
+  {id:'sw-out',    label:'Support Worker Outside London', icon:'S', g:'Support Worker'},
+  {id:'sw-lon',    label:'Support Worker in London',      icon:'S', g:'Support Worker'},
+  {id:'sw-wm',     label:'Support Worker West Midlands',  icon:'S', g:'Support Worker'},
+  {id:'sw-wales',  label:'Support Worker in Wales',       icon:'S', g:'Support Worker'},
+  {id:'sw-manc',   label:'Support Worker Manchester',     icon:'S', g:'Support Worker'},
+  {id:'sw-wy',     label:'Support Worker W Yorkshire',    icon:'S', g:'Support Worker'},
+  {id:'sw-ey',     label:'Support Worker E Yorkshire',    icon:'S', g:'Support Worker'},
+  {id:'nurse',     label:'Staff Nurse',                   icon:'N', g:'Nursing'},
+  {id:'mh-nurse',  label:'Mental Health Nurse',           icon:'N', g:'Nursing'},
+  {id:'res-nurse', label:'Research Nurse',                icon:'N', g:'Nursing'},
+  {id:'fellow',    label:'Clinical Fellow',               icon:'C', g:'Clinical'},
+  {id:'coder',     label:'Clinical Coder',                icon:'C', g:'Clinical'},
+  {id:'diet',      label:'Dietician',                     icon:'C', g:'Clinical'},
+  {id:'micro',     label:'Microbiology',                  icon:'C', g:'Clinical'},
+  {id:'phleb',     label:'Phlebotomist Leader',           icon:'C', g:'Clinical'},
+  {id:'res-asst',  label:'Research Assistant',            icon:'C', g:'Clinical'},
+  {id:'sw3',       label:'Social Worker',                 icon:'C', g:'Clinical'},
+  {id:'data',      label:'Data Analyst',                  icon:'D', g:'Professional'},
+  {id:'bi',        label:'BI Analyst',                    icon:'D', g:'Professional'},
+  {id:'fin',       label:'Finance',                       icon:'F', g:'Professional'},
+  {id:'hr',        label:'HR',                            icon:'H', g:'Professional'},
+  {id:'it',        label:'IT / Engineering',              icon:'I', g:'Professional'},
+  {id:'pm',        label:'Project Manager',               icon:'P', g:'Professional'},
+  {id:'ba',        label:'Business Analyst',              icon:'B', g:'Professional'},
+  {id:'log',       label:'Logistics',                     icon:'L', g:'Professional'},
+  {id:'coord',     label:'Coordinator',                   icon:'C', g:'Professional'},
+  {id:'est',       label:'Estates',                       icon:'E', g:'Professional'},
+];
+
+function esc(s){
+  return String(s||'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"')
+    .replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+}
+
+function toggleSponsor(){
+  _sponsor=!_sponsor;
+  document.getElementById('sponsor-btn').classList.toggle('active',_sponsor);
+  _pg=1;load(1);
+}
+
+async function load(pg){
+  if(_busy)return;
+  _busy=true;_pg=pg||1;skel();
+  try{
+    var cat=CATS.find(function(c){return c.id===_cat;})||CATS[0];
+    var q='/api/jobs?page='+_pg+'&category='+encodeURIComponent(_cat);
+    if(_kw) q+='&keyword='+encodeURIComponent(_kw);
+    if(_sponsor) q+='&sponsor=true';
+    var r=await fetch(q,{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    _jobs=d.jobs||[];_pgs=d.pages||1;_tot=d.total||0;
+    document.getElementById('sn-total').textContent=_tot;
+    document.getElementById('sn-upd').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('ptitle').textContent=cat.label;
+    document.getElementById('psub').textContent=_tot+' permanent NHS '+(_tot===1?'vacancy':'vacancies');
+    document.getElementById('rlabel').innerHTML=_tot>0?'Showing <strong>'+_jobs.length+'</strong> of <strong>'+_tot+'</strong> jobs':'';
+    render();pgn();
+  }catch(ex){
+    document.getElementById('jlist').innerHTML='<div class="empty"><h3>Could not load jobs</h3><p><a href="javascript:void(0)" onclick="_busy=false;load(1)" style="color:#3b82f6;font-weight:600">Try again</a></p></div>';
+    document.getElementById('pgn').innerHTML='';
+    _busy=false;return;
+  }
+  _busy=false;
+}
+
+function sidebar(){
+  var el=document.getElementById('cat-list'),h='',lg=null;
+  CATS.forEach(function(c){
+    if(c.g!==lg){h+='<div class="grp-label">'+c.g+'</div>';lg=c.g;}
+    h+='<button class="cat-btn'+(c.id===_cat?' active':'')+'" data-id="'+c.id+'">'
+      +'<i class="cat-icon">'+c.icon+'</i>'
+      +'<span class="cat-label">'+c.label+'</span>'
+      +'</button>';
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('.cat-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      _cat=b.dataset.id;_kw='';_pg=1;
+      document.getElementById('s-input').value='';
+      sidebar();load(1);
+    });
+  });
+}
+
+function render(){
+  var el=document.getElementById('jlist');
+  if(!_jobs.length){
+    el.innerHTML='<div class="empty"><h3>No vacancies right now</h3><p>'
+      +(_sponsor?'No jobs with sponsorship found. <a href="javascript:void(0)" onclick="toggleSponsor()" style="color:#3b82f6">Remove filter</a>':'No permanent jobs in this category right now. Check back soon.')
+      +'</p></div>';
+    return;
+  }
+  el.innerHTML=_jobs.map(function(j){
+    var title=esc(j.title);
+    var org=esc(j.organisation||'NHS Trust');
+    var url=esc(j.url);
+    var tgs='';
+    if(j.band)        tgs+='<span class="tag t-band">Band '+j.band+'</span>';
+    if(j.salary)      tgs+='<span class="tag t-salary">'+esc(j.salary)+'</span>';
+    if(j.location)    tgs+='<span class="tag t-loc">'+esc(j.location)+'</span>';
+    if(j.postedDate)  tgs+='<span class="tag t-date">'+esc(j.postedDate)+'</span>';
+    if(j.closingDate) tgs+='<span class="tag t-close">Closes '+esc(j.closingDate)+'</span>';
+    return '<div class="job-card">'
+      +'<div class="job-title"><a href="'+url+'" target="_blank">'+title+'</a></div>'
+      +'<div class="job-org">'+org+'</div>'
+      +(tgs?'<div class="job-meta">'+tgs+'</div>':'')
+      +'<div class="job-footer">'
+        +'<a href="'+url+'" target="_blank" class="view-btn">View Job</a>'
+        +'<button class="cp-btn" data-url="'+url+'" title="Copy link">'
+          +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+        +'</button>'
+        +'<a class="wa-btn" href="https://wa.me/?text='+encodeURIComponent('NHS Job: ')+encodeURIComponent(j.url)+'" target="_blank" title="Share on WhatsApp">'
+          +'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.089.537 4.09 1.562 5.857L.057 23.882a.5.5 0 0 0 .614.658l6.218-1.635A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.878 9.878 0 0 1-5.031-1.378l-.36-.214-3.733.981.994-3.648-.235-.374A9.869 9.869 0 0 1 2.106 12C2.106 6.57 6.57 2.106 12 2.106c5.43 0 9.894 4.464 9.894 9.894 0 5.43-4.464 9.894-9.894 9.894z"/></svg>'
+        +'</a>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  el.querySelectorAll('.cp-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var url=b.dataset.url;
+      (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(function(){
+        b.style.background='#dcfce7';b.style.borderColor='#86efac';b.style.color='#16a34a';
+        setTimeout(function(){b.style.background='';b.style.borderColor='';b.style.color='';},2000);
+      }).catch(function(){
+        var t=document.createElement('textarea');t.value=url;
+        document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);
+        b.style.background='#dcfce7';b.style.borderColor='#86efac';b.style.color='#16a34a';
+        setTimeout(function(){b.style.background='';b.style.borderColor='';b.style.color='';},2000);
+      });
+    });
+  });
+}
+
+function pgn(){
+  var el=document.getElementById('pgn');
+  if(_pgs<=1){el.innerHTML='';return;}
+  el.innerHTML='<button class="pg-btn" id="pp" '+(_pg<=1?'disabled':'')+'>← Prev</button>'
+    +'<span class="pg-info">'+_pg+' / '+_pgs+'</span>'
+    +'<button class="pg-btn" id="np" '+(_pg>=_pgs?'disabled':'')+'>Next →</button>';
+  var pp=document.getElementById('pp'),np=document.getElementById('np');
+  if(pp)pp.addEventListener('click',function(){load(_pg-1);window.scrollTo(0,0);});
+  if(np)np.addEventListener('click',function(){load(_pg+1);window.scrollTo(0,0);});
+}
+
+function skel(){
+  document.getElementById('jlist').innerHTML=
+    '<div class="sk-card"><div class="skeleton" style="width:55%;height:16px;margin-bottom:8px"></div><div class="skeleton" style="width:35%;height:12px;margin-bottom:10px"></div><div class="skeleton" style="width:70%;height:11px"></div></div>'.repeat(5);
+}
+
+sidebar();
+load(1);
+document.getElementById('s-input').addEventListener('input',function(){
+  clearTimeout(_tmr);
+  _tmr=setTimeout(function(){_kw=document.getElementById('s-input').value.trim();_pg=1;load(1);},400);
+});
+setInterval(function(){if(!_busy)load(_pg);},5*60*1000);
+</script>
+</body>
+</html>

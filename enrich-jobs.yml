@@ -1,0 +1,27 @@
+name: Enrich NHS Jobs
+
+# Calls /api/enrich repeatedly in small batches (15 jobs at a time) until nothing is
+# left unenriched. Runs after the fetch workflow so newly-saved jobs get their band and
+# sponsorship details filled in the same day.
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 8am UTC — after fetch-jobs.yml has had time to run
+  workflow_dispatch: {}
+
+jobs:
+  enrich-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enrich in batches until done
+        run: |
+          for i in $(seq 1 200); do
+            RESP=$(curl -sf "${{ secrets.PRISAHUB_URL }}/api/enrich?limit=15")
+            echo "$RESP" | jq -c .
+            REMAINING=$(echo "$RESP" | jq -r '.remaining // 0')
+            if [ "$REMAINING" = "0" ]; then
+              echo "All jobs enriched."
+              break
+            fi
+            sleep 1
+          done
