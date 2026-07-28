@@ -141,8 +141,14 @@ function passesFilter(job, cat, sponsorOnly) {
   // Title exclusions
   if (cat.exc && cat.exc.some(x => t.includes(x))) return false;
 
-  // Title inclusions
-  if (cat.inc && !cat.inc.some(x => t.includes(x))) return false;
+  // NOTE: a strict "title must match one of these exact hand-written phrases" inclusion
+  // filter used to run here. It was rejecting the large majority of genuinely relevant
+  // jobs across every category, because no fixed list of compound phrases can realistically
+  // cover how NHS Jobs' actual titles are worded (e.g. a plain "Support Worker" title
+  // doesn't contain any of the more specific phrases like "ward support worker"). Removed
+  // in favour of trusting fetch.js's own keyword-scoped NHS Jobs search plus the exclusion
+  // list above, which is enough to screen out obviously wrong roles without silently
+  // discarding legitimate ones.
 
   return true;
 }
