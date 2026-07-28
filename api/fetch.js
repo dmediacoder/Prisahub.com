@@ -127,7 +127,10 @@ async function dbSave(jobs, category) {
     .filter(j => isNhs(j.organisation))
     .map(j => ({ ...j, category, source: 'england', enriched: false, hassponsor: false }));
   if (!rows.length) return 0;
-  const r = await fetch(SUPABASE_URL + '/rest/v1/jobs', {
+  // on_conflict targets the (id, category) composite key added by fix-duplicate-category.sql —
+  // without this, a job matching two categories' keywords would have its second save silently
+  // overwrite the first save's category tag instead of existing as a row under both.
+  const r = await fetch(SUPABASE_URL + '/rest/v1/jobs?on_conflict=id,category', {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_KEY,
