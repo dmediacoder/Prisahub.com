@@ -1,11 +1,11 @@
 name: Enrich NHS Jobs
 
-# Calls /api/enrich repeatedly in small batches (15 jobs at a time) until nothing is
-# left unenriched. Scheduled about 1.5-2 hours after each fetch run so newly-saved jobs
-# get their band and sponsorship details filled the same day.
+# Calls /api/enrich repeatedly in small batches (10 jobs at a time, fetched in parallel
+# by enrich.js) until nothing is left unenriched. Runs after the fetch workflow so
+# newly-saved jobs get their band and sponsorship details filled in the same day.
 #
-# Same UTC/BST note as fetch-jobs.yml — subtract 1 hour from each cron line once the UK
-# switches to GMT in late October.
+# A single failed batch (network hiccup, one slow NHS Jobs page) no longer kills the
+# whole run — it logs the failure and tries again on the next loop iteration instead.
 
 on:
   schedule:
@@ -19,10 +19,22 @@ jobs:
     steps:
       - name: Enrich in batches until done
         run: |
-          for i in $(seq 1 200); do
-            RESP=$(curl -sf "${{ secrets.PRISAHUB_URL }}/api/enrich?limit=15")
-            echo "$RESP" | jq -c .
-            REMAINING=$(echo "$RESP" | jq -r '.remaining // 0')
+          FAILS=0
+          for i in $(seq 1 400); do
+            RESP=$(curl -sf --max-time 15 "${{ secrets.PRISAHUB_URL }}/api/enrich?limit=10" || echo "")
+            if [ -z "$RESP" ]; then
+              FAILS=$((FAILS + 1))
+              echo "[$i] request failed or timed out ($FAILS in a row)"
+              if [ "$FAILS" -ge 8 ]; then
+                echo "Too many consecutive failures, stopping this run — will retry on the next schedule."
+                break
+              fi
+              sleep 2
+              continue
+            fi
+            FAILS=0
+            echo "$RESP" | jq -c . || echo "  (couldn't parse response: $RESP)"
+            REMAINING=$(echo "$RESP" | jq -r '.remaining // 0' 2>/dev/null || echo "0")
             if [ "$REMAINING" = "0" ]; then
               echo "All jobs enriched."
               break
